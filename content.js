@@ -1,102 +1,230 @@
-if (window.location.hostname === 'www.facebook.com' || window.location.hostname === 'web.facebook.com') {
-  function addBookmarkButton(postElement) {
-    if (postElement.querySelector('.bookmark-button')) {
-      return; // Button already exists
+// Facebook Bookmark Extension - Content Script
+
+// Configuration
+const BOOKMARK_BUTTON_CLASS = 'fb-bookmark-button';
+const POST_SELECTOR = '[data-ad-rendering-role="title"]';
+const LIKE_SELECTOR = '[data-ad-rendering-role="like_button"]';
+const MENU_SELECTOR = '[aria-label="Like"]';
+const CHECK_INTERVAL = 5000; // Check for new posts every 2 seconds
+
+// Store for already processed posts
+const processedPosts = new Set();
+
+// Main function to add bookmark buttons to posts
+function addBookmarkButtons() {
+  // Find all Facebook posts
+  // const posts = document.querySelectorAll(POST_SELECTOR);
+  const posts = document.querySelectorAll(LIKE_SELECTOR);
+
+  // console.log('posts', posts.length);
+
+  posts.forEach(postLike => {
+    const post = postLike?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement;
+    // Skip if already processed
+    if (processedPosts.has(post) || post.querySelector(`.${BOOKMARK_BUTTON_CLASS}`)) {
+      return;
     }
+    console.log('post', post);
 
-    const button = document.createElement('button');
-    button.textContent = 'Bookmark';
-    button.classList.add('bookmark-button', 'x1i10hfl', 'x1qjc9v5', 'x1oa3qoh', 'xqeqjp1', 'x2nq7zg', 'x1swvt13', 'x1pi30zi', 'x1l90r2v', 'x1ycx5nu', 'x6o7n8i', 'x13svdzi', 'x1jx94hy', 'x1plvlek', 'xryxfnj', 'x1c4vz4f', 'x2lah0s', 'x1q0g3np', 'x1ghb86c', 'x1xlr1w8', 'x1egstgx', 'x47uaug', 'x1j1ka1n', 'x1rdyj79', 'xs83m0k', 'x1mk9n2u', 'x1m1dhpf'); // Facebook button classes - might need adjustment
+    // Mark as processed
 
-    button.style.marginLeft = '8px';  // Adjust spacing as needed
+    // Find the post menu area to add our button
+    const menuArea = post.querySelector(MENU_SELECTOR)?.parentElement?.parentElement;
+    // console.log("menuArea", menuArea, post);
+    if (!menuArea) return;
 
-
-    button.addEventListener('click', () => {
-      try {
-        const postLinkElement = postElement.querySelector('a[href*="/posts/"], a[href*="/permalink/"]');
-        const postUrl = postLinkElement ? postLinkElement.href : window.location.href;  // Fallback to current URL if no post link
-
-        const titleElement = postElement.querySelector('h1, h2, h3, h4, h5, h6') || postElement.querySelector('span') || postElement; //Try to find a heading or span, otherwise use the whole post
-        const title = titleElement.textContent.trim().substring(0, 200) + (titleElement.textContent.length > 200 ? "..." : ""); //Limit title length
+    // for sure ensure that we are not adding multiple buttons to same post
+    processedPosts.add(post);
 
 
-        let author = "Unknown Author";
-        const authorElement = postElement.querySelector('a[href*="/profile.php?"], a[href^="https://www.facebook.com/"]');
-        if (authorElement) {
-            author = authorElement.textContent.trim();
-        } else {
-          // For posts in groups or pages, try to find the author name in a different structure
-          const subHeaderElement = postElement.querySelector('span > a');
-          if(subHeaderElement){
-            author = subHeaderElement.textContent.trim();
-          }
-        }
+    // Create bookmark button
+    const bookmarkButton = document.createElement('div');
+    bookmarkButton.className = BOOKMARK_BUTTON_CLASS;
+    bookmarkButton.innerHTML = `
+      <div role="button" tabindex="0" class="bookmark-btn" 
+           style="cursor: pointer; padding: 8px; display: flex; align-items: center;">
+        <span style="margin-right: 5px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17.6" height="17.6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </span>
+        <span style="font-size: 110%;">Bookmark</span>
+      </div>
+    `;
 
-        const timestampElement = postElement.querySelector('abbr[data-utime]');
-        const timestamp = timestampElement ? parseInt(timestampElement.dataset.utime) * 1000 : Date.now();
-
-        const bookmark = {
-          url: postUrl,
-          title: title,
-          author: author,
-          timestamp: timestamp,
-        };
-
-
-        chrome.runtime.sendMessage({ type: 'addBookmark', bookmark: bookmark }, (response) => {
-          if (response && response.success) {
-            button.textContent = 'Bookmarked!';
-            button.disabled = true;
-            // Revert after a short delay
-            setTimeout(() => {
-              //Consider changing the styling back instead of just reverting text
-              //Also consider showing a checkmark icon instead of text
-              button.textContent = 'Bookmark';
-              button.disabled = false;
-            }, 2000);  // 2 seconds
-          } else {
-            console.error("Error adding bookmark:", response ? response.error : "No response from background script.");
-            // Show an error message to the user if needed
-            button.textContent = "Bookmark Failed";
-            setTimeout(() => {
-              button.textContent = "Bookmark";
-            }, 3000);
-          }
-        });
-      } catch (error) {
-        console.error("Error in bookmarking:", error);
-        // Handle errors appropriately, e.g., show a user-friendly message
-        button.textContent = "Bookmark Error";
-        setTimeout(() => {
-          button.textContent = "Bookmark";
-        }, 3000);
-      }
+    // Add click event
+    bookmarkButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveBookmark(post);
     });
 
-    // Find the reactions bar or a suitable place to insert the button
-    const actionsBar = postElement.querySelector('[role="toolbar"]');
+    // Add button to post
+    menuArea.appendChild(bookmarkButton);
+  });
+}
 
-    if (actionsBar) {
-        actionsBar.appendChild(button);
-    } else {
-        //Fallback: Append to the end of the post if no actions bar is found (less ideal)
-        postElement.appendChild(button);
+// Function to extract post data
+async function extractPostData(post) {
+  try {
+    // Get post URL
+    const postLink = post.querySelector('a[href*="/posts/"]') ||
+      post.querySelector('a[href*="/photo.php"]') ||
+      post.querySelector('a[href*="/permalink.php"]');
+    // dung nut copy trước
+    const btnCopy = post.querySelector('[aria-label="Copy link"]');
+    btnCopy.click();
+    const copiedText = await navigator.clipboard.readText();
+    // wait 1 second to ensure the copied text is available
+    await new Promise(resolve => setTimeout(resolve, 1000 * 1));
+
+    const postUrl = copiedText ? copiedText : (postLink ? postLink.href : window.location.href);
+    // console.log('copiedText', copiedText);
+    // console.log('postUrl', postUrl);
+
+    // Get post author
+    const authorElement = post.querySelector('h3 a, h4 a, strong a');
+    const author = authorElement ? authorElement.textContent.trim() : 'Unknown Author';
+
+    // Get post timestamp
+    const timestampElement = post.querySelector('a[href*="/posts/"] span, a[href*="/photo.php"] span');
+    const timestamp = timestampElement ? timestampElement.textContent.trim() : new Date().toLocaleString();
+
+    // Get post content for title
+    const contentElement = post.querySelector('div[data-ad-preview="message"]') ||
+      post.querySelector('div[data-ad-comet-preview="message"]');
+    let title = contentElement ? contentElement.textContent.trim() : '';
+
+    // If no text content, check if it's an image post
+    if (!title) {
+      const imageElement = post.querySelector('img[alt]:not([alt=""])');
+      title = imageElement ? `Photo: ${imageElement.alt.trim()}` : 'Facebook Post';
     }
+
+    // Limit title length
+    title = title.length > 100 ? title.substring(0, 97) + '...' : title;
+
+    const postData = {
+      url: postUrl,
+      title: title,
+      author: author,
+      timestamp: timestamp,
+      savedAt: new Date().toISOString()
+    };
+
+    console.log('postData', postData, JSON.stringify(postData),);
+
+
+    return postData;
+
+  } catch (error) {
+    console.error('Error extracting post data:', error);
+    return null;
+  }
+}
+
+// Function to save bookmark
+async function saveBookmark(post) {
+  const postData = await extractPostData(post);
+
+  if (!postData) {
+    showNotification('Error extracting post data', 'error');
+    return;
   }
 
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === 'childList') {
-        const posts = document.querySelectorAll('[data-pagelet^="FeedUnit_"], [id^="hyperfeed_story_id_"]');
-        posts.forEach(post => addBookmarkButton(post));
+  // Send to background script for storage
+  chrome.runtime.sendMessage({
+    action: 'saveBookmark',
+    bookmark: postData
+  }, response => {
+    if (response && response.success) {
+      showNotification('Post bookmarked successfully!', 'success');
+    } else {
+      showNotification(response.message || 'Error saving bookmark', 'error');
+    }
+  });
+}
 
+// Function to show notification
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `fb-bookmark-notification ${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    background-color: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#F44336' : '#2196F3'};
+    color: white;
+    border-radius: 4px;
+    z-index: 9999;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  `;
+
+  document.body.appendChild(notification);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s';
+    setTimeout(() => notification.remove(), 500);
+  }, 3000);
+}
+
+// Initialize and set up observers
+function initialize() {
+  // Add buttons to existing posts
+  addBookmarkButtons();
+
+  // Set up interval to check for new posts
+  setInterval(addBookmarkButtons, CHECK_INTERVAL);
+
+  // Set up mutation observer for dynamic content
+  const observer = new MutationObserver((mutations) => {
+    let shouldCheck = false;
+
+    for (const mutation of mutations) {
+      if (mutation.addedNodes.length > 0) {
+        shouldCheck = true;
+        break;
       }
-    });
+    }
+
+    if (shouldCheck) {
+      addBookmarkButtons();
+    }
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // Initial check for existing posts
-  const initialPosts = document.querySelectorAll('[data-pagelet^="FeedUnit_"], [id^="hyperfeed_story_id_"]');
-  initialPosts.forEach(post => addBookmarkButton(post));
+  // Start observing
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
 }
+
+// Handle extension context invalidation
+function handleContextInvalidation() {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'ping') {
+      sendResponse({ status: 'alive' });
+    }
+  });
+
+  window.addEventListener('error', (e) => {
+    if (e.message.includes('Extension context invalidated')) {
+      console.log('Extension context invalidated. Reloading...');
+      window.location.reload();
+    }
+  });
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialize);
+} else {
+  initialize();
+}
+
+// Handle context invalidation
+handleContextInvalidation();

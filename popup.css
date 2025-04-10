@@ -1,24 +1,203 @@
-body {
-  width: 300px;
-  padding: 10px;
-}
+/* Facebook Bookmark Extension - Popup CSS */
 
-#bookmarkList {
-  list-style: none;
+* {
+  margin: 0;
   padding: 0;
-  margin-top: 10px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-#bookmarkList li {
-  border: 1px solid #ccc;
-  padding: 8px;
-  margin-bottom: 5px;
+body {
+  width: 700px;
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e6eb;
+  background-color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+h1 {
+  font-size: 18px;
+  color: #1877F2;
+  margin-bottom: 12px;
+}
+
+.search-container {
   display: flex;
   align-items: center;
+  background-color: #F0F2F5;
+  border-radius: 20px;
+  padding: 0 12px;
+  margin-bottom: 8px;
 }
 
-#bookmarkList li img {
-  max-width: 16px;
-  max-height: 16px;
-  margin-right: 5px;
+#search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  outline: none;
+  font-size: 14px;
+}
+
+#search-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #65676B;
+}
+
+#bookmarks-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.author-group {
+  margin-bottom: 16px;
+}
+
+.author-header {
+  padding: 8px 16px;
+  font-weight: 600;
+  color: #65676B;
+  font-size: 14px;
+  background-color: #F0F2F5;
+  border-radius: 4px;
+  margin: 0 8px 8px 8px;
+}
+
+.bookmark-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e6eb;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.bookmark-item:hover {
+  background-color: #F0F2F5;
+}
+
+.bookmark-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #050505;
+  cursor: pointer;
+}
+
+.bookmark-title:hover {
+  text-decoration: underline;
+}
+
+.bookmark-url {
+  font-size: 12px;
+  color: #65676B;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bookmark-meta {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #65676B;
+}
+
+.bookmark-timestamp {
+  margin-right: 8px;
+}
+
+.delete-button {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #65676B;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bookmark-item:hover .delete-button {
+  opacity: 1;
+}
+
+.delete-button:hover {
+  color: #E41E3F;
+}
+
+#empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #65676B;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.empty-icon {
+  margin-bottom: 16px;
+  color: #BEC3C9;
+}
+
+.empty-subtitle {
+  font-size: 14px;
+  margin-top: 8px;
+  color: #8A8D91;
+}
+
+#loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #65676B;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #F0F2F5;
+  border-top: 3px solid #1877F2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hidden {
+  display: none !important;
+}
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: middle;
 }

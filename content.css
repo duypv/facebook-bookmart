@@ -1,0 +1,58 @@
+/* Facebook Bookmark Extension - Content CSS */
+
+.fb-bookmark-button {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.fb-bookmark-button:hover {
+  opacity: 0.8;
+}
+
+.fb-bookmark-button svg {
+  fill: none;
+  stroke: #65676B;
+  margin-right: 4px;
+}
+
+.fb-bookmark-button.bookmarked svg {
+  fill: #1877F2;
+  stroke: #1877F2;
+}
+
+.fb-bookmark-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  color: white;
+  border-radius: 4px;
+  z-index: 9999;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s, fadeOut 0.5s 2.5s forwards;
+}
+
+.fb-bookmark-notification.success {
+  background-color: #4CAF50;
+}
+
+.fb-bookmark-notification.error {
+  background-color: #F44336;
+}
+
+.fb-bookmark-notification.info {
+  background-color: #2196F3;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

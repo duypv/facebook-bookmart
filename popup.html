@@ -1,13 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Facebook Bookmarks</title>
-    <link rel="stylesheet" href="popup.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facebook Bookmarks</title>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1>My Bookmarks</h1>
-  <ul id="bookmarkList"></ul>
-  <p id="emptyState">No bookmarks yet.</p>
+  <div class="container">
+    <header>
+      <h1>Facebook Bookmarks</h1>
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search bookmarks...">
+        <button id="search-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+    
+    <div id="bookmarks-container">
+      <!-- Bookmarks will be loaded here -->
+      <div id="empty-state" class="hidden">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <p>No bookmarks yet</p>
+        <p class="empty-subtitle">Bookmark Facebook posts to see them here</p>
+      </div>
+      
+      <div id="loading-indicator">
+        <div class="spinner"></div>
+        <p>Loading bookmarks...</p>
+      </div>
+      
+      <div id="bookmarks-list"></div>
+    </div>
+  </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>
