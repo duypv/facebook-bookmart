@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchButton = document.getElementById('search-button');
   const sortField = document.getElementById('sort-field');
   const sortDirection = document.getElementById('sort-direction');
+  const exportCsvButton = document.getElementById('export-csv');
   
   // Load bookmarks
   loadBookmarks();
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   searchButton.addEventListener('click', () => handleSearch());
   sortField.addEventListener('change', handleSort);
   sortDirection.addEventListener('change', handleSort);
+  exportCsvButton.addEventListener('click', exportBookmarksToCSV);
   
   // Function to load bookmarks
   function loadBookmarks() {
@@ -267,5 +269,69 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function hideLoading() {
     loadingIndicator.classList.add('hidden');
+  }
+  
+  // Function to export bookmarks to CSV
+  function exportBookmarksToCSV() {
+    chrome.runtime.sendMessage({ action: 'getBookmarks' }, (response) => {
+      if (response && response.bookmarks && response.bookmarks.length > 0) {
+        const bookmarks = response.bookmarks;
+        
+        // CSV header
+        let csvContent = 'Title,Author,URL,Date Added\n';
+        
+        // Add each bookmark as a row
+        bookmarks.forEach(bookmark => {
+          const title = bookmark.title.replace(/,/g, ' ').replace(/"/g, '""');
+          const author = bookmark.author.replace(/,/g, ' ').replace(/"/g, '""');
+          const url = bookmark.url.replace(/"/g, '""');
+          const date = new Date(bookmark.savedAt).toLocaleDateString();
+          
+          // Create CSV row with proper escaping
+          csvContent += `"${title}","${author}","${url}","${date}"\n`;
+        });
+        
+        // Create a blob and download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        // Set up download attributes
+        const timestamp = new Date().toISOString().slice(0, 10);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `facebook-bookmarks-${timestamp}.csv`);
+        link.style.display = 'none';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.className = 'notification success';
+        notification.textContent = 'Bookmarks exported successfully!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.add('fade-out');
+          setTimeout(() => notification.remove(), 500);
+        }, 3000);
+      } else {
+        // Show error notification if no bookmarks
+        const notification = document.createElement('div');
+        notification.className = 'notification error';
+        notification.textContent = 'No bookmarks to export!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.add('fade-out');
+          setTimeout(() => notification.remove(), 500);
+        }, 3000);
+      }
+    });
   }
 });
