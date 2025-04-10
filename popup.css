@@ -1,0 +1,24 @@
+body {
+  width: 300px;
+  padding: 10px;
+}
+
+#bookmarkList {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+#bookmarkList li {
+  border: 1px solid #ccc;
+  padding: 8px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+#bookmarkList li img {
+  max-width: 16px;
+  max-height: 16px;
+  margin-right: 5px;
+}
