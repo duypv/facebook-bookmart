@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loading-indicator');
   const searchInput = document.getElementById('search-input');
   const searchButton = document.getElementById('search-button');
+  const sortField = document.getElementById('sort-field');
+  const sortDirection = document.getElementById('sort-direction');
   
   // Load bookmarks
   loadBookmarks();
@@ -15,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add event listeners
   searchInput.addEventListener('input', handleSearch);
   searchButton.addEventListener('click', () => handleSearch());
+  sortField.addEventListener('change', handleSort);
+  sortDirection.addEventListener('change', handleSort);
   
   // Function to load bookmarks
   function loadBookmarks() {
@@ -43,11 +47,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     hideEmptyState();
     
+    // Get sort preferences
+    const sortBy = sortField.value;
+    const sortOrder = sortDirection.value;
+    
     // Group bookmarks by author
     const bookmarksByAuthor = groupByAuthor(bookmarks);
     
-    // Sort authors alphabetically
-    const sortedAuthors = Object.keys(bookmarksByAuthor).sort();
+    // Sort authors based on sort preferences
+    let sortedAuthors = Object.keys(bookmarksByAuthor);
+    
+    if (sortBy === 'name') {
+      // Sort authors alphabetically
+      sortedAuthors.sort((a, b) => {
+        return sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
+      });
+    } else {
+      // For date sorting, we'll sort authors based on the most recent bookmark in each group
+      sortedAuthors.sort((a, b) => {
+        const mostRecentA = getMostRecentDate(bookmarksByAuthor[a]);
+        const mostRecentB = getMostRecentDate(bookmarksByAuthor[b]);
+        return sortOrder === 'asc' 
+          ? mostRecentA - mostRecentB 
+          : mostRecentB - mostRecentA;
+      });
+    }
     
     // Render each group
     sortedAuthors.forEach(author => {
@@ -60,10 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
       authorHeader.textContent = author;
       authorGroup.appendChild(authorHeader);
       
-      // Sort bookmarks by date (newest first)
-      const sortedBookmarks = bookmarksByAuthor[author].sort((a, b) => {
-        return new Date(b.savedAt) - new Date(a.savedAt);
-      });
+      // Sort bookmarks based on sort preferences
+      let sortedBookmarks = bookmarksByAuthor[author];
+      
+      if (sortBy === 'name') {
+        // Sort by title
+        sortedBookmarks.sort((a, b) => {
+          return sortOrder === 'asc' 
+            ? a.title.localeCompare(b.title) 
+            : b.title.localeCompare(a.title);
+        });
+      } else {
+        // Sort by date
+        sortedBookmarks.sort((a, b) => {
+          return sortOrder === 'asc' 
+            ? new Date(a.savedAt) - new Date(b.savedAt) 
+            : new Date(b.savedAt) - new Date(a.savedAt);
+        });
+      }
       
       // Add bookmarks for this author
       sortedBookmarks.forEach(bookmark => {
@@ -157,6 +195,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  // Function to handle sorting
+  function handleSort() {
+    // Get current search term to maintain filtering
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    chrome.runtime.sendMessage({ action: 'getBookmarks' }, (response) => {
+      if (response && response.bookmarks) {
+        let filteredBookmarks = response.bookmarks;
+        
+        // Apply search filter if there's a search term
+        if (searchTerm) {
+          filteredBookmarks = response.bookmarks.filter(bookmark => {
+            return bookmark.title.toLowerCase().includes(searchTerm) ||
+                   bookmark.url.toLowerCase().includes(searchTerm) ||
+                   bookmark.author.toLowerCase().includes(searchTerm);
+          });
+        }
+        
+        renderBookmarks(filteredBookmarks);
+      }
+    });
+  }
+  
   // Helper function to group bookmarks by author
   function groupByAuthor(bookmarks) {
     return bookmarks.reduce((groups, bookmark) => {
@@ -178,6 +239,13 @@ document.addEventListener('DOMContentLoaded', () => {
     //   .replace(/>/g, '&gt;')
     //   .replace(/"/g, '&quot;')
     //   .replace(/'/g, '&#039;');
+  }
+  
+  // Helper function to get the most recent date from a group of bookmarks
+  function getMostRecentDate(bookmarks) {
+    if (!bookmarks || bookmarks.length === 0) return new Date(0);
+    
+    return Math.max(...bookmarks.map(bookmark => new Date(bookmark.savedAt)));
   }
   
   // UI helper functions

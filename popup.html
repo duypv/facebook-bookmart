@@ -22,6 +22,24 @@
     </header>
     
     <div id="bookmarks-container">
+      <!-- Sort controls -->
+      <div class="sort-controls">
+        <div class="sort-by">
+          <label for="sort-field">Sort by:</label>
+          <select id="sort-field">
+            <option value="name">Name</option>
+            <option value="date" selected>Date added</option>
+          </select>
+        </div>
+        <div class="sort-order">
+          <label for="sort-direction">Order:</label>
+          <select id="sort-direction">
+            <option value="asc">Ascending</option>
+            <option value="desc" selected>Descending</option>
+          </select>
+        </div>
+      </div>
+      
       <!-- Bookmarks will be loaded here -->
       <div id="empty-state" class="hidden">
         <div class="empty-icon">
