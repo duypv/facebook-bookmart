@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Facebook Bookmark",
-  "version": "1.0",
+  "version": "1.0.1",
   "description": "Save and organize your favorite Facebook posts",
   "permissions": ["storage", "tabs", "activeTab", "clipboardRead"],
   "host_permissions": ["*://*.facebook.com/*"],

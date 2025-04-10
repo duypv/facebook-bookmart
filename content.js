@@ -74,9 +74,10 @@ async function extractPostData(post) {
     // dung nut copy trước
     const btnCopy = post.querySelector('[aria-label="Copy link"]');
     btnCopy.click();
+    await new Promise(resolve => setTimeout(resolve, 1000 * 1));
     const copiedText = await navigator.clipboard.readText();
     // wait 1 second to ensure the copied text is available
-    await new Promise(resolve => setTimeout(resolve, 1000 * 1));
+    // await new Promise(resolve => setTimeout(resolve, 1000 * 2));
 
     const postUrl = copiedText ? copiedText : (postLink ? postLink.href : window.location.href);
     // console.log('copiedText', copiedText);
